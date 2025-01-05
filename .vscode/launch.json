@@ -1,0 +1,33 @@
+{
+  // 使用 IntelliSense 了解相关属性。
+  // 悬停以查看现有属性的描述。
+  // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Launch Program",
+      "program": "${workspaceFolder}/${input:programPath}",
+      "args": [],
+      "runtimeExecutable": "node",
+      "sourceMaps": true,
+      "outFiles": ["${workspaceFolder}/output/**/*.js"]
+    }
+  ],
+  "inputs": [
+    {
+      "type": "pickString",
+      "id": "programPath",
+      "description": "Select the program to launch",
+      "options": [
+        "output/automaton.js",
+        "output/main.js",
+        "output/Map.js",
+        "output/RBTree.js",
+        "output/tools.js",
+        "output/tscc.js"
+      ]
+    }
+  ]
+}
