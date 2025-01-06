@@ -5,29 +5,11 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "node",
+      "name": "执行当前文件",
+      "program": "${file}",
       "request": "launch",
-      "name": "Launch Program",
-      "program": "${workspaceFolder}/${input:programPath}",
-      "args": [],
-      "runtimeExecutable": "node",
-      "sourceMaps": true,
-      "outFiles": ["${workspaceFolder}/output/**/*.js"]
-    }
-  ],
-  "inputs": [
-    {
-      "type": "pickString",
-      "id": "programPath",
-      "description": "Select the program to launch",
-      "options": [
-        "output/automaton.js",
-        "output/main.js",
-        "output/Map.js",
-        "output/RBTree.js",
-        "output/tools.js",
-        "output/tscc.js"
-      ]
+      "skipFiles": ["<node_internals>/**"],
+      "type": "node"
     }
   ]
 }

@@ -112,5 +112,32 @@ class AutomatonNode {
   }
 }
 export class Automaton {
-  public constructor() {}
+  public start: AutomatonNode;
+  public end: AutomatonNode;
+  public constructor(start: number, end: number) {
+    this.start = new AutomatonNode();
+    this.end = new AutomatonNode();
+    this.start.addEdge(new Edge(start, end, [this.end]));
+  }
+  public kleeneClosure() {
+    let newStart = new AutomatonNode();
+    let newEnd = new AutomatonNode();
+    newStart.addEdge(new Edge(0, 0, [this.start, newEnd]));
+    this.end.addEdge(new Edge(0, 0, [this.start, newEnd]));
+    this.start = newStart;
+    this.end = newEnd;
+  }
+  public concatenate(automaton: Automaton) {
+    this.end.addEdge(new Edge(0, 0, [automaton.start]));
+    this.end = automaton.end;
+  }
+  public union(automaton: Automaton) {
+    let newStart = new AutomatonNode();
+    newStart.addEdge(new Edge(0, 0, [this.start, automaton.start]));
+    let newEnd = new AutomatonNode();
+    this.end.addEdge(new Edge(0, 0, [newEnd]));
+    automaton.end.addEdge(new Edge(0, 0, [newEnd]));
+    this.start = newStart;
+    this.end = newEnd;
+  }
 }
