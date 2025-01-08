@@ -12,5 +12,8 @@
   "description": "",
   "devDependencies": {
     "@types/node": "^22.10.5"
+  },
+  "dependencies": {
+    "tscc": "file:../tscc/tscc-1.0.0.tgz"
   }
 }

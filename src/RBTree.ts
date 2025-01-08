@@ -306,6 +306,18 @@ export class RBTree<T> {
     }
   }
 
+  public toArray(): T[] {
+    let cache: T[] = [];
+    function inOrderTraversal(node: RBTreeNode<T> | undefined) {
+      if (node == undefined) return;
+      inOrderTraversal(node.leftChild);
+      cache.push(node.value);
+      inOrderTraversal(node.rightChild);
+    }
+    inOrderTraversal(this.root);
+    return cache;
+  }
+
   /**
    * 测试函数
    */

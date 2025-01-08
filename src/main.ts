@@ -1,27 +1,61 @@
-import { Automaton } from './automaton.js';
-import { Grammar, default as TSCC } from 'tscc.js';
-function main() {
-  let grammar: Grammar = {
-    tokens: ['ch', '[', ']', '-', '(', ')', '+', '*', '^', '{', '}', '|'],
-    association: [{ nonassoc: ['+', '*'] }],
-    BNF: [
-      { 'exp:ch': {} },
-      { 'exp:[ union_units ]': {} },
-      { 'exp:[ ^ union_units ]': {} },
-      { 'exp:( exp )': {} },
-      { 'exp:exp exp': {} },
-      { 'exp:exp | exp': {} },
-      { 'exp:exp +': {} },
-      { 'exp:exp *': {} },
-      { 'union_units:union_units union_unit': {} },
-      { 'union_units:union_unit': {} },
-      { 'union_unit:ch': {} },
-      { 'union_unit:range': {} },
-      { 'range:ch - ch': {} },
-      { 'S:ε': {} },
-      { 'B:S S S': {} },
-      { 'B:c': {} },
-    ],
-  };
+import Parse, { YYTOKEN } from './parser.js';
+import { Lex } from './parser.js';
+class Lexer implements Lex {
+  private source: string;
+  private pos = 0;
+  private lastToken: string = '';
+  constructor(src: string) {
+    this.source = src;
+  }
+  yylex(): YYTOKEN {
+    if (this.pos >= this.source.length) {
+      return { type: '$', value: undefined, yytext: '' };
+    }
+    const createToken = (type: string, value: number): YYTOKEN => {
+      this.lastToken = String.fromCharCode(value);
+      return { type, value, yytext: String.fromCharCode(value) };
+    };
+    let c = this.source[this.pos];
+    if (
+      c === '(' ||
+      c === ')' ||
+      c === '[' ||
+      c === ']' ||
+      c === '-' ||
+      c === '+' ||
+      c === '*' ||
+      c === '^' ||
+      c === '|' ||
+      c === '-'
+    ) {
+      this.pos++;
+      return createToken(c, c.charCodeAt(0));
+    } else {
+      if (c == '\\') {
+        this.pos++;
+        switch (this.source[this.pos]) {
+          case 'n':
+            return createToken('ch', '\n'.charCodeAt(0));
+          case 't':
+            return createToken('ch', '\t'.charCodeAt(0));
+          case '\\':
+            return createToken('ch', '\\'.charCodeAt(0));
+          case 'u':
+            let code = this.source.substring(this.pos + 1, this.pos + 5);
+            this.pos += 4;
+            return createToken('ch', parseInt(code, 16));
+          default:
+            throw 'unkown escape';
+        }
+      } else {
+        this.pos++;
+        return createToken('ch', c.charCodeAt(0));
+      }
+    }
+  }
+  yyerror(msg: string) {
+    console.error(`${msg}"${this.lastToken}"`);
+  }
 }
-main();
+let lexer = new Lexer('[a]');
+Parse(lexer);
