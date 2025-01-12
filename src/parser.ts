@@ -1,4 +1,4 @@
-import { Automaton,AutomatonEdge } from './automaton.js';
+import { NFAAutomaton,AutomatonEdge } from './automaton.js';
 import { assert } from './tools.js';
 export interface Token {
     type: string;
@@ -23,7 +23,6 @@ export default function Parse(lexer: Lex):any {
     let syntaxLength = [1,1,2,3,2,2,3,4,1,3,2,1,1,3];
     let functionArray:(((args:any[],stack:any[])=>any)|undefined)[]=[
         function ($) {
-            console.log('解析完毕');
             return $[0];
         },function ($) {
                         return $[0];
@@ -50,7 +49,7 @@ export default function Parse(lexer: Lex):any {
                         let ret = undefined;
                         for (let edge of edges) {
                             if (ret == undefined) {
-                                ret = new Automaton({ ch: [edge.start, edge.end] });
+                                ret = new NFAAutomaton({ ch: [edge.start, edge.end] });
                             }
                             else {
                                 ret.start.addEdge(edge);
@@ -65,7 +64,7 @@ export default function Parse(lexer: Lex):any {
                         for (let edge of edges) {
                             for (let tmp of edge.not()) {
                                 if (ret == undefined) {
-                                    ret = new Automaton({ ch: [tmp.start, tmp.end] });
+                                    ret = new NFAAutomaton({ ch: [tmp.start, tmp.end] });
                                 }
                                 else {
                                     ret.start.addEdge(tmp);
@@ -75,7 +74,7 @@ export default function Parse(lexer: Lex):any {
                         assert(ret != undefined);
                         return ret;
                     },function ($) {
-                        return new Automaton({ ch: [$[0], $[0]] });
+                        return new NFAAutomaton({ ch: [$[0], $[0]] });
                     },function ($) {
                         return $[1];
                     },function ($) {

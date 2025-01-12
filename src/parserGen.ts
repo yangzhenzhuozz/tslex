@@ -1,11 +1,11 @@
-import { Automaton, AutomatonEdge } from './automaton.js';
+import { NFAAutomaton, AutomatonEdge } from './automaton.js';
 import { Grammar, default as TSCC } from 'tscc';
 import fs from 'fs';
 import { assert } from './tools.js';
 class Lexical {}
 function gen() {
   let grammar: Grammar = {
-    userCode: `import { Automaton,AutomatonEdge } from './automaton.js';\nimport { assert } from './tools.js';`,
+    userCode: `import { NFAAutomaton,AutomatonEdge } from './automaton.js';\nimport { assert } from './tools.js';`,
     tokens: ['ch', '[', ']', '-', '(', ')', '+', '*', '^', '{', '}', '|'],
     association: [
       { nonassoc: ['('] },
@@ -16,9 +16,8 @@ function gen() {
       { left: ['|'] },
       { nonassoc: ['ch'] },
     ],
-    accept: function ($): Automaton {
-      console.log('解析完毕');
-      return $[0] as Automaton;
+    accept: function ($): NFAAutomaton {
+      return $[0] as NFAAutomaton;
     },
     /*
      BNF: [
@@ -40,44 +39,44 @@ function gen() {
     BNF: [
       {
         'exp:exp_unit': {
-          action: function ($): Automaton {
-            return $[0] as Automaton;
+          action: function ($): NFAAutomaton {
+            return $[0] as NFAAutomaton;
           },
         },
       },
       {
         'exp:exp exp': {
           priority: 'link',
-          action: function ($): Automaton {
-            let ret = <Automaton>$[0];
-            ret.concatenate(<Automaton>$[1]);
+          action: function ($): NFAAutomaton {
+            let ret = <NFAAutomaton>$[0];
+            ret.concatenate(<NFAAutomaton>$[1]);
             return ret;
           },
         },
       },
       {
         'exp:exp | exp': {
-          action: function ($): Automaton {
-            let ret = <Automaton>$[0];
-            ret.union(<Automaton>$[2]);
+          action: function ($): NFAAutomaton {
+            let ret = <NFAAutomaton>$[0];
+            ret.union(<NFAAutomaton>$[2]);
             return ret;
           },
         },
       },
       {
         'exp:exp_unit +': {
-          action: function ($): Automaton {
-            let ret = (<Automaton>$[0]).clone();
-            (<Automaton>$[0]).kleeneClosure();
-            ret.concatenate(<Automaton>$[0]);
+          action: function ($): NFAAutomaton {
+            let ret = (<NFAAutomaton>$[0]).clone();
+            (<NFAAutomaton>$[0]).kleeneClosure();
+            ret.concatenate(<NFAAutomaton>$[0]);
             return ret;
           },
         },
       }, //只允许一个表达式单元重复
       {
         'exp:exp_unit *': {
-          action: function ($): Automaton {
-            let ret = $[0] as Automaton;
+          action: function ($): NFAAutomaton {
+            let ret = $[0] as NFAAutomaton;
             ret.kleeneClosure();
             return ret;
           },
@@ -85,13 +84,13 @@ function gen() {
       }, //只允许一个表达式单元重复
       {
         'exp_unit:[ union_units ]': {
-          action: function ($): Automaton {
+          action: function ($): NFAAutomaton {
             let edges = $[1] as AutomatonEdge[];
             assert(edges.length > 0, '[]里面必须有至少一个字符');
-            let ret: Automaton | undefined = undefined;
+            let ret: NFAAutomaton | undefined = undefined;
             for (let edge of edges) {
               if (ret == undefined) {
-                ret = new Automaton({ ch: [edge.start, edge.end] });
+                ret = new NFAAutomaton({ ch: [edge.start, edge.end] });
               } else {
                 ret.start.addEdge(edge);
               }
@@ -103,14 +102,14 @@ function gen() {
       },
       {
         'exp_unit:[ ^ union_units ]': {
-          action: function ($): Automaton {
+          action: function ($): NFAAutomaton {
             let edges = $[2] as AutomatonEdge[];
             assert(edges.length > 0, '^后面必须有至少一个字符');
-            let ret: Automaton | undefined = undefined;
+            let ret: NFAAutomaton | undefined = undefined;
             for (let edge of edges) {
               for (let tmp of edge.not()) {
                 if (ret == undefined) {
-                  ret = new Automaton({ ch: [tmp.start, tmp.end] });
+                  ret = new NFAAutomaton({ ch: [tmp.start, tmp.end] });
                 } else {
                   ret.start.addEdge(tmp);
                 }
@@ -124,14 +123,14 @@ function gen() {
       {
         'exp_unit:ch': {
           action: function ($) {
-            return new Automaton({ ch: [$[0], $[0]] });
+            return new NFAAutomaton({ ch: [$[0], $[0]] });
           },
         },
       },
       {
         'exp_unit:( exp )': {
           action: function ($) {
-            return $[1] as Automaton;
+            return $[1] as NFAAutomaton;
           },
         },
       },

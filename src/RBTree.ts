@@ -171,7 +171,7 @@ export class RBTree<T> {
       }
     }
   }
-  public insert(value: T) {
+  public add(value: T) {
     // tree is empty
     if (this.root == undefined) {
       this.root = new RBTreeNode(value);
@@ -306,6 +306,12 @@ export class RBTree<T> {
     }
   }
 
+  public has(value: T): boolean {
+    return this.find(value) != undefined;
+  }
+  public get values(): T[] {
+    return this.toArray();
+  }
   public toArray(): T[] {
     let cache: T[] = [];
     function inOrderTraversal(node: RBTreeNode<T> | undefined) {

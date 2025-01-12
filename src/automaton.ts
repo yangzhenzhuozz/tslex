@@ -1,10 +1,19 @@
 import { RBTree } from './RBTree.js';
+import { assert } from './tools.js';
 
+/**
+ * -1表示any,-2表示永远匹配不到
+ */
 export class AutomatonEdge {
   public start: number;
   public end: number;
   public target: AutomatonNode[];
   public constructor(start: number, end: number, target: AutomatonNode[]) {
+    if (start == -1 || end == -1) {
+      if (start != -1 || end != -1) {
+        throw 'end 和 start 必须同时为0';
+      }
+    }
     if (end < start) {
       throw 'end必须不小于start';
     }
@@ -88,8 +97,8 @@ export class AutomatonEdge {
   }
   public not(): AutomatonEdge[] {
     if (this.start == 0 && this.end == 0xffff) {
-      //-1永远不会被匹配
-      return [new AutomatonEdge(-1, -1, this.target)];
+      //-2永远不会被匹配
+      return [new AutomatonEdge(-2, -2, this.target)];
     }
     if (this.start == 0) {
       return [new AutomatonEdge(this.end + 1, 0xffff, this.target)];
@@ -108,14 +117,17 @@ export class AutomatonEdge {
     else return 0;
   }
   public toString(): string {
-    return `(${this.start}, ${this.end})`;
+    return `(${this.start}, ${this.end})=>[${this.target
+      .map((item) => item.idx)
+      .join(',')}]`;
   }
 }
 
-class AutomatonNode {
+export class AutomatonNode {
   static counter = 0;
   public idx: number;
   public edges: RBTree<AutomatonEdge>;
+  public endHandler: ((arg: string) => any)[] = [];
   public constructor() {
     this.idx = AutomatonNode.counter;
     AutomatonNode.counter++;
@@ -136,19 +148,64 @@ class AutomatonNode {
         this.addEdge(e);
       }
     } else {
-      this.edges.insert(edge);
+      this.edges.add(edge);
     }
   }
+
+  /**
+   * 计算给定节点数组的闭包。
+   *
+   * 该方法会遍历所有节点及其边，找到所有可以通过ε边（start为-1的边）到达的节点，
+   * 并将这些节点加入结果集中。
+   *
+   * @param arr 初始节点数组
+   * @returns 闭包节点数组
+   */
+  public static closure(arr: AutomatonNode[]): AutomatonNode[] {
+    let set = new RBTree<AutomatonNode>((a, b) => a.idx - b.idx);
+    let fifo = [] as AutomatonNode[];
+    for (let n of arr) {
+      set.add(n);
+      fifo.push(n);
+    }
+    while (fifo.length > 0) {
+      let node = fifo.shift();
+      if (node !== undefined) {
+        for (let edge of node.edges.toArray()) {
+          if (edge.start === -1) {
+            for (let t of edge.target) {
+              if (!set.has(t)) {
+                set.add(t);
+                fifo.push(t);
+              }
+            }
+          }
+        }
+      }
+    }
+    return set.toArray().sort((a, b) => a.idx - b.idx);
+  }
+
   public static test() {
     //通过修改a,b的区间来测试，覆盖Edge的所有separate情况
-    let node = new AutomatonNode();
-    let a = new AutomatonEdge(10, 20, []);
-    let b = new AutomatonEdge(11, 20, []);
-    node.addEdge(a);
-    node.addEdge(b);
+    // let node = new AutomatonNode();
+    // let a = new AutomatonEdge(10, 20, []);
+    // let b = new AutomatonEdge(11, 20, []);
+    // node.addEdge(a);
+    // node.addEdge(b);
+
+    //测试闭包
+    let a = new AutomatonNode();
+    let b = new AutomatonNode();
+    let c = new AutomatonNode();
+    a.addEdge(new AutomatonEdge(-1, -1, [c]));
+    b.addEdge(new AutomatonEdge(-1, -1, [c]));
+    let ret = AutomatonNode.closure([a, a, a, a]);
+    debugger;
   }
 }
-export class Automaton {
+
+export class NFAAutomaton {
   public start: AutomatonNode;
   public end: AutomatonNode;
   public constructor(param: {
@@ -183,9 +240,9 @@ export class Automaton {
    *
    * 最后，返回一个包含新起始节点和新结束节点的新的自动机实例。
    *
-   * @returns {Automaton} 新的自动机实例
+   * @returns {NFAAutomaton} 新的自动机实例
    */
-  public clone(): Automaton {
+  public clone(): NFAAutomaton {
     let newStart = new AutomatonNode();
     let newEnd = new AutomatonNode();
     let analyzed: { [key: number]: AutomatonNode } = {
@@ -214,37 +271,252 @@ export class Automaton {
         }
       }
     }
-    return new Automaton({
+    return new NFAAutomaton({
       nodes: [newStart, newEnd],
     });
   }
   public kleeneClosure() {
     let newStart = new AutomatonNode();
     let newEnd = new AutomatonNode();
-    newStart.addEdge(new AutomatonEdge(0, 0, [this.start, newEnd]));
-    this.end.addEdge(new AutomatonEdge(0, 0, [this.start, newEnd]));
+    newStart.addEdge(new AutomatonEdge(-1, -1, [this.start, newEnd]));
+    this.end.addEdge(new AutomatonEdge(-1, -1, [this.start, newEnd]));
     this.start = newStart;
     this.end = newEnd;
   }
-  public concatenate(automaton: Automaton) {
-    this.end.addEdge(new AutomatonEdge(0, 0, [automaton.start]));
+  public concatenate(automaton: NFAAutomaton) {
+    this.end.addEdge(new AutomatonEdge(-1, -1, [automaton.start]));
     this.end = automaton.end;
   }
-  public union(automaton: Automaton) {
+  public union(automaton: NFAAutomaton) {
     let newStart = new AutomatonNode();
-    newStart.addEdge(new AutomatonEdge(0, 0, [this.start, automaton.start]));
+    newStart.addEdge(new AutomatonEdge(-1, -1, [this.start, automaton.start]));
     let newEnd = new AutomatonNode();
-    this.end.addEdge(new AutomatonEdge(0, 0, [newEnd]));
-    automaton.end.addEdge(new AutomatonEdge(0, 0, [newEnd]));
+    this.end.addEdge(new AutomatonEdge(-1, -1, [newEnd]));
+    automaton.end.addEdge(new AutomatonEdge(-1, -1, [newEnd]));
     this.start = newStart;
     this.end = newEnd;
   }
-  
+
+  /**
+   * 将当前NFA自动机转换为DFA自动机。
+   *
+   * 该方法首先创建一个节点集合缓存 `nodeSetCache`，用于存储已分析的状态集合。
+   * 然后定义一个函数 `sign`，用于生成状态集合的唯一标识符。
+   *
+   * 接着，计算起始状态的闭包 `startSet`，并创建对应的DFA起始节点 `dfaStart`。
+   * 将起始状态集合及其对应的DFA节点存入缓存，并将起始状态集合加入待分析队列 `fifo`。
+   *
+   * 在遍历待分析队列时，对于每一个NFA状态集合，获取其对应的DFA状态节点。
+   * 然后遍历该集合中的每个节点的边，将所有非ε边添加到当前DFA状态节点中。
+   *
+   * 接着，清空当前DFA状态节点的边，并重新计算目标状态集合的闭包。
+   * 如果目标状态集合不在缓存中，则创建新的DFA状态节点，并将其存入缓存和待分析队列。
+   * 最后，将边添加到当前DFA状态节点中。
+   *
+   * 返回包含DFA起始节点的DFA自动机实例。
+   *
+   * @returns {DFAAutomaton} 转换后的DFA自动机实例
+   */
+  public toDFA(): DFAAutomaton {
+    let nodeSetCache = new Map<string, AutomatonNode>();
+    let sign = (arr: AutomatonNode[]): string => {
+      return arr
+        .sort((a, b) => a.idx - b.idx)
+        .map((item) => String(item.idx))
+        .join(',');
+    };
+
+    let startSet = AutomatonNode.closure([this.start]);
+    let dfaStart = new AutomatonNode();
+    for (let set of startSet) {
+      for (let handler of set.endHandler) {
+        dfaStart.endHandler.push(handler);
+      }
+    }
+    nodeSetCache.set(sign(startSet), dfaStart);
+    let fifo: AutomatonNode[][] = [startSet]; //待分析的状态集
+
+    while (fifo.length > 0) {
+      let nowNFAStatSet = fifo.shift();
+      assert(nowNFAStatSet != undefined);
+      let nowDFAstate = nodeSetCache.get(sign(nowNFAStatSet)); //cache中一定有
+      assert(nowDFAstate != undefined);
+
+      //把set中的边都添加到nowStat中,这里利用了addEdge函数会自动拆分边的特点获取到目标状态集合
+      for (let node of nowNFAStatSet) {
+        for (let edge of node.edges.toArray()) {
+          for (let t of edge.target) {
+            if (edge.start != -1) {
+              //把所有非ε边的目标添加到targetSet
+              nowDFAstate.addEdge(new AutomatonEdge(edge.start, edge.end, [t]));
+            }
+          }
+        }
+      }
+
+      let allEdges = nowDFAstate.edges.toArray();
+      nowDFAstate.edges = new RBTree(AutomatonEdge.compare); //把之前添加的边清空
+
+      for (let edge of allEdges) {
+        let targetNFAStateSet = AutomatonNode.closure(edge.target);
+        let signature = sign(targetNFAStateSet);
+
+        if (!nodeSetCache.has(signature)) {
+          let endHandlers = [];
+          //把所有的endHandler放到目标状态,因为closure函数已经进行了排序,所以先创建的NFA会排在前面
+          for (let s of targetNFAStateSet) {
+            endHandlers.push(...s.endHandler);
+          }
+          let newDFAState = new AutomatonNode();
+          newDFAState.endHandler = endHandlers;
+          nodeSetCache.set(signature, newDFAState);
+          fifo.push(targetNFAStateSet);
+        }
+        nowDFAstate.addEdge(
+          new AutomatonEdge(edge.start, edge.end, [
+            nodeSetCache.get(signature)!,
+          ])
+        );
+      }
+    }
+    return new DFAAutomaton(dfaStart);
+  }
+
   //测试代码
-  public static test() {
-    let a = new Automaton({ ch: [99, 99] });
+  public static testClone() {
+    let a = new NFAAutomaton({ ch: [99, 99] });
     a.kleeneClosure();
     let n = a.clone();
     debugger;
   }
+}
+interface DFAAutonSerializedDatum {
+  edges: {
+    start: number;
+    end: number;
+    target: number;
+  }[];
+  handlers: string[];
+}
+type DFAAutonSerializedData = DFAAutonSerializedDatum[];
+export class DFAAutomaton {
+  private pos = 0;
+  private source: string = '';
+  public start: AutomatonNode;
+  public endHandler: (() => any) | undefined;
+  public constructor(start: AutomatonNode) {
+    this.start = start;
+  }
+  public setSource(src: string) {
+    this.source = src;
+  }
+  public run() {
+    if (this.pos >= this.source.length) {
+      if (this.endHandler) {
+        return this.endHandler();
+      }
+    } else {
+      let strLen = 0;
+      let nowState = this.start;
+      let lastState = nowState;
+      for (;;) {
+        //这里读取到了EOF(end of file),所以更新lastState
+        if (this.pos + strLen >= this.source.length) {
+          lastState = nowState;
+          break;
+        }
+        let ch = this.source[this.pos + strLen];
+        let code = ch.charCodeAt(0);
+        let edge = nowState.edges.find(new AutomatonEdge(code, code, []));
+        if (edge != undefined) {
+          lastState = nowState;
+          nowState = edge.target[0];
+          strLen++;
+        } else {
+          break;
+        }
+      }
+      if (lastState.endHandler.length > 0) {
+        let ret = lastState.endHandler[0](
+          this.source.substring(this.pos, this.pos + strLen)
+        );
+        this.pos += strLen;
+        return ret;
+      } else {
+        throw `无法识别的字符${this.source[this.pos]}`;
+      }
+    }
+  }
+  public static deserialize(data: DFAAutonSerializedData): DFAAutomaton {
+    let nodes: AutomatonNode[] = [];
+    for (let i = 0; i < data.length; i++) {
+      let node = new AutomatonNode();
+      nodes.push(node);
+      for (let handler of data[i].handlers) {
+        node.endHandler.push(
+          new Function('return ' + handler)() as (arg: any) => any
+        );
+      }
+    }
+    for (let i = 0; i < data.length; i++) {
+      let node = nodes[i];
+      let data_edges = data[i].edges;
+      for (let d_edge of data_edges) {
+        node.addEdge(
+          new AutomatonEdge(d_edge.start, d_edge.end, [nodes[d_edge.target]])
+        );
+      }
+    }
+    return new DFAAutomaton(nodes[0]);
+  }
+  public serialize(): DFAAutonSerializedData {
+    let start = this.start;
+    let cache: {
+      [key in number]: number;
+    } = {
+      [start.idx]: 0,
+    };
+    let fifo = [start] as AutomatonNode[];
+    let output: {
+      edges: {
+        start: number;
+        end: number;
+        target: number;
+      }[];
+      handlers: string[];
+    }[] = [
+      {
+        edges: [],
+        handlers: start.endHandler.map((item) => item.toString()),
+      },
+    ];
+    for (; fifo.length > 0; ) {
+      let nowState = fifo.shift();
+      assert(nowState != undefined);
+      let outputNowStateIdx = cache[nowState.idx];
+      for (let edge of nowState.edges.toArray()) {
+        assert(edge.target.length == 1, 'DFA的targe是唯一的');
+        let target = edge.target[0];
+
+        if (cache[target.idx] == undefined) {
+          cache[target.idx] = output.length;
+          output.push({
+            edges: [],
+            handlers: target.endHandler.map((item) => item.toString()),
+          });
+          fifo.push(target);
+        }
+        output[outputNowStateIdx].edges.push({
+          start: edge.start,
+          end: edge.end,
+          target: cache[target.idx],
+        });
+      }
+    }
+    return output;
+  }
+}
+export interface LexerRule {
+  reg: string;
+  handler: (text: string) => any;
 }
