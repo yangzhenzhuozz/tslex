@@ -398,7 +398,7 @@ interface DFAAutonSerializedDatum {
   }[];
   handlers: string[];
 }
-type DFAAutonSerializedData = DFAAutonSerializedDatum[];
+export type DFAAutonSerializedData = DFAAutonSerializedDatum[];
 export class DFAAutomaton {
   private pos = 0;
   private source: string = '';

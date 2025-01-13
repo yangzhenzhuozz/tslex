@@ -1,19 +1,31 @@
 {
   "name": "tslex",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc -p tsconfig.json",
+    "pack": "npm run build && npm pack"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
-  "description": "",
   "devDependencies": {
     "@types/node": "^22.10.5"
   },
   "dependencies": {
     "tscc": "file:../tscc/tscc-1.0.0.tgz"
-  }
+  },
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/yangzhenzhuozz/tslex.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yangzhenzhuozz/tslex/issues"
+  },
+  "homepage": "https://github.com/yangzhenzhuozz/tslex#readme",
+  "description": "一个基于DFA的正则引擎"
 }

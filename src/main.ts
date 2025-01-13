@@ -2,11 +2,15 @@ import {
   AutomatonEdge,
   AutomatonNode,
   DFAAutomaton,
+  DFAAutonSerializedData,
+  LexerRule,
   NFAAutomaton,
 } from './automaton.js';
 import Parse, { YYTOKEN } from './parser.js';
 import { Lex } from './parser.js';
-import rule from './lexRule.js';
+/**
+ * 这是用于解析正则表达式的词法分析器
+ */
 class Lexer implements Lex {
   private source: string;
   private pos = 0;
@@ -42,10 +46,13 @@ class Lexer implements Lex {
         this.pos++;
         switch (this.source[this.pos]) {
           case 'n':
+            this.pos++;
             return createToken('ch', '\n'.charCodeAt(0));
           case 't':
+            this.pos++;
             return createToken('ch', '\t'.charCodeAt(0));
           case '\\':
+            this.pos++;
             return createToken('ch', '\\'.charCodeAt(0));
           case 'u':
             let code = parseInt(
@@ -67,9 +74,9 @@ class Lexer implements Lex {
     console.error(`${msg}"${this.lastToken}"`);
   }
 }
-function main() {
-  let NFAList = [] as NFAAutomaton[];
-  for (let r of rule) {
+export function genDFA(rules: LexerRule[]): DFAAutomaton {
+  let NFAList: NFAAutomaton[] = [];
+  for (let r of rules) {
     let lexer = new Lexer(r.reg);
     let automaton = Parse(lexer) as NFAAutomaton;
     automaton.end.endHandler.push(r.handler!);
@@ -83,9 +90,8 @@ function main() {
   }
   let finalNFA = new NFAAutomaton({ nodes: [finalNFAStart, finalNFAEnd] });
   let dfa = finalNFA.toDFA();
-  let serialized = dfa.serialize();
-  let realDFA = DFAAutomaton.deserialize(serialized);
-  realDFA.setSource('b');
-  realDFA.run();
+  return dfa;
 }
-main();
+export function deserialize(serialized: DFAAutonSerializedData): DFAAutomaton {
+  return DFAAutomaton.deserialize(serialized);
+}

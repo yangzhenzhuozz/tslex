@@ -92,6 +92,7 @@ function gen() {
               if (ret == undefined) {
                 ret = new NFAAutomaton({ ch: [edge.start, edge.end] });
               } else {
+                edge.target = [ret.end];
                 ret.start.addEdge(edge);
               }
             }
@@ -111,6 +112,7 @@ function gen() {
                 if (ret == undefined) {
                   ret = new NFAAutomaton({ ch: [tmp.start, tmp.end] });
                 } else {
+                  tmp.target = [ret.end];
                   ret.start.addEdge(tmp);
                 }
               }
