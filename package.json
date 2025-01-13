@@ -1,7 +1,7 @@
 {
   "name": "tslex",
   "version": "1.0.0",
-  "main": "main.js",
+  "main": "dist/main.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "pack": "npm run build && npm pack"
@@ -27,5 +27,11 @@
     "url": "https://github.com/yangzhenzhuozz/tslex/issues"
   },
   "homepage": "https://github.com/yangzhenzhuozz/tslex#readme",
-  "description": "一个基于DFA的正则引擎"
+  "description": "一个基于DFA的正则引擎",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "module": "dist/main.js",
+  "types": "dist/main.d.ts"
 }
