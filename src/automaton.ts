@@ -516,7 +516,7 @@ export class DFAAutomaton {
     return output;
   }
 }
-export interface LexerRule {
+export interface LexerRule<T> {
   reg: string;
-  handler: (text: string) => any;
+  handler: (text: string) => T;
 }

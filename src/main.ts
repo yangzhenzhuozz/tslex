@@ -74,7 +74,7 @@ class Lexer implements Lex {
     console.error(`${msg}"${this.lastToken}"`);
   }
 }
-export function genDFA(rules: LexerRule[]): DFAAutomaton {
+export function genDFA<T>(rules: LexerRule<T>[]): DFAAutomaton {
   let NFAList: NFAAutomaton[] = [];
   for (let r of rules) {
     let lexer = new Lexer(r.reg);
