@@ -22,77 +22,70 @@ export class AutomatonEdge {
     this.target = target;
   }
   public separate(other: AutomatonEdge): AutomatonEdge[] {
-    let ret: AutomatonEdge[];
+    let ret: AutomatonEdge[] = [];
     let cmp = AutomatonEdge.compare(this, other);
     if (cmp < 0 || cmp > 0) {
       ret = [
         new AutomatonEdge(this.start, this.end, this.target),
         new AutomatonEdge(other.start, other.end, other.target),
       ];
-    } else {
-      if (other.start < this.start && other.end > this.end) {
+    } else if (this.start < other.start && this.end < other.end) {
+      ret = [
+        new AutomatonEdge(this.start, other.start - 1, this.target),
+        new AutomatonEdge(other.start, this.end, [
+          ...this.target,
+          ...other.target,
+        ]),
+        new AutomatonEdge(this.end + 1, other.end, other.target),
+      ];
+    } else if (this.start === other.start && this.end === other.end) {
+      ret = [
+        new AutomatonEdge(this.start, this.end, [
+          ...this.target,
+          ...other.target,
+        ]),
+      ];
+    } else if (this.start === other.start) {
+      if (this.end < other.end) {
         ret = [
-          new AutomatonEdge(other.start, this.start - 1, other.target),
           new AutomatonEdge(this.start, this.end, [
-            ...this.target,
-            ...other.target,
-          ]),
-          new AutomatonEdge(this.end + 1, other.end, other.target),
-        ];
-      } else if (this.start === other.start && this.end === other.end) {
-        ret = [
-          new AutomatonEdge(this.start, this.end, [
-            ...this.target,
-            ...other.target,
-          ]),
-        ];
-      } else if (this.start === other.start && this.end > other.end) {
-        ret = [
-          new AutomatonEdge(this.start, other.end, [
-            ...this.target,
-            ...other.target,
-          ]),
-          new AutomatonEdge(other.end + 1, this.end, this.target),
-        ];
-      } else if (this.end === other.end && this.start < other.start) {
-        ret = [
-          new AutomatonEdge(this.start, other.start - 1, this.target),
-          new AutomatonEdge(other.start, this.end, [
-            ...this.target,
-            ...other.target,
-          ]),
-        ];
-      } else if (other.start > this.start && other.end < this.end) {
-        ret = [
-          new AutomatonEdge(this.start, other.start - 1, this.target),
-          new AutomatonEdge(other.start, other.end, [
-            ...this.target,
-            ...other.target,
-          ]),
-          new AutomatonEdge(other.end + 1, this.end, this.target),
-        ];
-      } else if (other.start < this.start) {
-        ret = [
-          new AutomatonEdge(other.start, this.start - 1, other.target),
-          new AutomatonEdge(this.start, other.end, [
-            ...this.target,
-            ...other.target,
-          ]),
-          new AutomatonEdge(other.end + 1, this.end, this.target),
-        ];
-      } else if (other.end > this.end) {
-        ret = [
-          new AutomatonEdge(this.start, other.start - 1, this.target),
-          new AutomatonEdge(other.start, this.end, [
             ...this.target,
             ...other.target,
           ]),
           new AutomatonEdge(this.end + 1, other.end, other.target),
         ];
       } else {
-        throw '不可能出现的情况';
+        ret = [
+          new AutomatonEdge(this.start, other.end, [
+            ...this.target,
+            ...other.target,
+          ]),
+          new AutomatonEdge(other.end + 1, this.end, this.target),
+        ];
       }
+    } else if (this.end === other.end) {
+      if (this.start < other.start) {
+        ret = [
+          new AutomatonEdge(this.start, other.start - 1, this.target),
+          new AutomatonEdge(other.start, this.end, [
+            ...this.target,
+            ...other.target,
+          ]),
+        ];
+      } else {
+        ret = [
+          new AutomatonEdge(other.start, this.start - 1, other.target),
+          new AutomatonEdge(this.start, this.end, [
+            ...this.target,
+            ...other.target,
+          ]),
+        ];
+      }
+    } else {
+      throw new Error('不可能出现的情况');
     }
+
+    assert(ret.length != 0);
     return ret;
   }
   public not(): AutomatonEdge[] {
