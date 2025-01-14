@@ -420,16 +420,15 @@ export class DFAAutomaton {
       let nowState = this.start;
       let lastState = nowState;
       for (;;) {
-        //这里读取到了EOF(end of file),所以更新lastState
+        lastState = nowState;
+        //这里读取到了EOF(end of file)
         if (this.pos + strLen >= this.source.length) {
-          lastState = nowState;
           break;
         }
         let ch = this.source[this.pos + strLen];
         let code = ch.charCodeAt(0);
         let edge = nowState.edges.find(new AutomatonEdge(code, code, []));
         if (edge != undefined) {
-          lastState = nowState;
           nowState = edge.target[0];
           strLen++;
         } else {
