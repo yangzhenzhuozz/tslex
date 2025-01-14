@@ -29,14 +29,23 @@ export class AutomatonEdge {
         new AutomatonEdge(this.start, this.end, this.target),
         new AutomatonEdge(other.start, other.end, other.target),
       ];
-    } else if (this.start < other.start && this.end < other.end) {
+    } else if (this.start < other.start && this.end > other.end) {
       ret = [
         new AutomatonEdge(this.start, other.start - 1, this.target),
-        new AutomatonEdge(other.start, this.end, [
+        new AutomatonEdge(other.start, other.end, [
           ...this.target,
           ...other.target,
         ]),
-        new AutomatonEdge(this.end + 1, other.end, other.target),
+        new AutomatonEdge(other.end + 1, this.end, this.target),
+      ];
+    } else if (this.start > other.start && this.end < other.end) {
+      ret = [
+        new AutomatonEdge(other.start, this.start - 1, other.target),
+        new AutomatonEdge(this.start, this.end, [
+          ...this.target,
+          ...other.target,
+        ]),
+        new AutomatonEdge(this.end + 1, other.end, this.target),
       ];
     } else if (this.start === other.start && this.end === other.end) {
       ret = [
