@@ -45,7 +45,7 @@ export class AutomatonEdge {
           ...this.target,
           ...other.target,
         ]),
-        new AutomatonEdge(this.end + 1, other.end, this.target),
+        new AutomatonEdge(this.end + 1, other.end, other.target),
       ];
     } else if (this.start === other.start && this.end === other.end) {
       ret = [
