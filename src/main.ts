@@ -36,11 +36,13 @@ class Lexer implements Lex {
       c === '+' ||
       c === '*' ||
       c === '^' ||
-      c === '|' ||
-      c === '-'
+      c === '|'
     ) {
       this.pos++;
       return createToken(c, c.charCodeAt(0));
+    } else if (c === '.') {
+      this.pos++;
+      return createToken('ch', -1); //在parse针对-1单独处理，[]中的'\.'和'.'都等价于字符'.',外部的'\.'和'.'分别表示字符'.'和any
     } else {
       if (c == '\\') {
         this.pos++;
@@ -54,6 +56,17 @@ class Lexer implements Lex {
           case '\\':
             this.pos++;
             return createToken('ch', '\\'.charCodeAt(0));
+          case '+':
+          case '-':
+          case '(':
+          case ')':
+          case '[':
+          case ']':
+          case '|':
+          case '.':
+            c = this.source[this.pos];
+            this.pos++;
+            return createToken('ch', c.charCodeAt(0));
           case 'u':
             let code = parseInt(
               this.source.substring(this.pos + 1, this.pos + 5),

@@ -76,7 +76,12 @@ export default function Parse(lexer: Lex):any {
                         assert(ret != undefined);
                         return ret;
                     },function ($) {
-                        return new NFAAutomaton({ ch: [$[0], $[0]] });
+                        if ($[0] == -1) {
+                            return new NFAAutomaton({ ch: [0, 0xffff] });
+                        }
+                        else {
+                            return new NFAAutomaton({ ch: [$[0], $[0]] });
+                        }
                     },function ($) {
                         return $[1];
                     },function ($) {
@@ -84,9 +89,30 @@ export default function Parse(lexer: Lex):any {
                     },function ($) {
                         return [$[0]];
                     },function ($) {
-                        return new AutomatonEdge($[0], $[0], []);
+                        let code;
+                        if ($[0] == -1) {
+                            code = '.'.charCodeAt(0);
+                        }
+                        else {
+                            code = $[0];
+                        }
+                        return new AutomatonEdge(code, code, []);
                     },function ($) {
-                        return new AutomatonEdge($[0], $[2], []);
+                        let code1;
+                        let code2;
+                        if ($[0] == -1) {
+                            code1 = '.'.charCodeAt(0);
+                        }
+                        else {
+                            code1 = $[0];
+                        }
+                        if ($[2] == -1) {
+                            code2 = '.'.charCodeAt(0);
+                        }
+                        else {
+                            code2 = $[2];
+                        }
+                        return new AutomatonEdge(code1, code2, []);
                     }];
     let result;//最终规约之后的返回值,由accept动作提供
     let yytoken:YYTOKEN | undefined;

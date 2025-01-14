@@ -125,7 +125,11 @@ function gen() {
       {
         'exp_unit:ch': {
           action: function ($) {
-            return new NFAAutomaton({ ch: [$[0], $[0]] });
+            if ($[0] == -1) {
+              return new NFAAutomaton({ ch: [0, 0xffff] });
+            } else {
+              return new NFAAutomaton({ ch: [$[0], $[0]] });
+            }
           },
         },
       },
@@ -153,14 +157,32 @@ function gen() {
       {
         'union_unit:ch': {
           action: function ($) {
-            return new AutomatonEdge($[0] as number, $[0] as number, []);
+            let code: number;
+            if ($[0] == -1) {
+              code = '.'.charCodeAt(0);
+            } else {
+              code = $[0] as number;
+            }
+            return new AutomatonEdge(code, code, []);
           },
         },
       },
       {
         'union_unit:ch - ch': {
           action: function ($) {
-            return new AutomatonEdge($[0] as number, $[2] as number, []);
+            let code1: number;
+            let code2: number;
+            if ($[0] == -1) {
+              code1 = '.'.charCodeAt(0);
+            } else {
+              code1 = $[0] as number;
+            }
+            if ($[2] == -1) {
+              code2 = '.'.charCodeAt(0);
+            } else {
+              code2 = $[2] as number;
+            }
+            return new AutomatonEdge(code1, code2, []);
           },
         },
       },
