@@ -58,12 +58,14 @@ class Lexer implements Lex {
             return createToken('ch', '\\'.charCodeAt(0));
           case '+':
           case '-':
+          case '^':
+          case '*':
+          case '|':
+          case '.':
           case '(':
           case ')':
           case '[':
           case ']':
-          case '|':
-          case '.':
             c = this.source[this.pos];
             this.pos++;
             return createToken('ch', c.charCodeAt(0));
