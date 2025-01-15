@@ -420,11 +420,11 @@ export class DFAAutomaton {
     } else {
       let strLen = 0;
       let nowState = this.start;
-      let lastState = nowState;
+      let lastState: AutomatonNode;
       for (;;) {
-        lastState = nowState;
         //这里读取到了EOF(end of file)
         if (this.pos + strLen >= this.source.length) {
+          lastState = nowState;
           break;
         }
         let ch = this.source[this.pos + strLen];
@@ -434,6 +434,7 @@ export class DFAAutomaton {
           nowState = edge.target[0];
           strLen++;
         } else {
+          lastState = nowState;
           break;
         }
       }
