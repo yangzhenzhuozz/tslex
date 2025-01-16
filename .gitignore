@@ -4,3 +4,4 @@ node_modules/
 #output
 dist
 *.tgz
+package-lock.json
