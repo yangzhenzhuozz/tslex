@@ -398,7 +398,7 @@ interface DFAAutonSerializedDatum {
     end: number;
     target: number;
   }[];
-  handlers: string[];
+  handlers: ((text: string) => any)[];
 }
 export type DFAAutonSerializedData = DFAAutonSerializedDatum[];
 export class DFAAutomaton {
@@ -455,9 +455,7 @@ export class DFAAutomaton {
       let node = new AutomatonNode();
       nodes.push(node);
       for (let handler of data[i].handlers) {
-        node.endHandler.push(
-          new Function('return ' + handler)() as (arg: any) => any
-        );
+        node.endHandler.push(handler);
       }
     }
     for (let i = 0; i < data.length; i++) {
@@ -479,17 +477,10 @@ export class DFAAutomaton {
       [start.idx]: 0,
     };
     let fifo = [start] as AutomatonNode[];
-    let output: {
-      edges: {
-        start: number;
-        end: number;
-        target: number;
-      }[];
-      handlers: string[];
-    }[] = [
+    let output: DFAAutonSerializedDatum[] = [
       {
         edges: [],
-        handlers: start.endHandler.map((item) => item.toString()),
+        handlers: start.endHandler,
       },
     ];
     for (; fifo.length > 0; ) {
@@ -504,7 +495,7 @@ export class DFAAutomaton {
           cache[target.idx] = output.length;
           output.push({
             edges: [],
-            handlers: target.endHandler.map((item) => item.toString()),
+            handlers: target.endHandler,
           });
           fifo.push(target);
         }
