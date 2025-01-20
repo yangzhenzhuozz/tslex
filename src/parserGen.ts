@@ -2,7 +2,6 @@ import { NFAAutomaton, AutomatonEdge } from './automaton.js';
 import { Grammar, default as TSCC } from 'tscc';
 import fs from 'fs';
 import { assert } from './tools.js';
-class Lexical {}
 function gen() {
   let grammar: Grammar = {
     userCode: `import { NFAAutomaton,AutomatonEdge } from './automaton.js';\nimport { assert } from './tools.js';`,

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "dist/main.js",
   "scripts": {
-    "buildParser":"tsc ./src/parserGen.ts --noCheck --outDir ./dist --target ESnext",
+    "buildParser":"tsc ./src/parserGen.ts --outDir ./dist --target ESnext --moduleResolution nodenext --module nodenext",
     "genParser":"npm run buildParser && node ./dist/parserGen.js",
     "build": "npm run genParser && tsc -p tsconfig.json",
     "pack": "npm run build && npm pack"
