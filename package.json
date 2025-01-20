@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "dist/main.js",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "buildParser":"tsc./src/paserGen.ts --noCheck --outDir./dist --target ESnext",
+    "genParser":"npm run buildParser && node./dist/parserGen.js",
+    "build": "npm run genParser && tsc -p tsconfig.json",
     "pack": "npm run build && npm pack"
   },
   "keywords": [],
