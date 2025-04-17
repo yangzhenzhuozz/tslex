@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "dist/main.js",
   "scripts": {
-    "buildParser":"tsc ./src/parserGen.ts --outDir ./dist --target ESnext --moduleResolution nodenext --module nodenext",
-    "genParser":"npm run buildParser && node ./dist/parserGen.js",
+    "buildParser": "tsc ./src/parserGen.ts --outDir ./dist --target ESnext --moduleResolution nodenext --module nodenext",
+    "genParser": "npm run buildParser && node ./dist/parserGen.js",
     "build": "npm run genParser && tsc -p tsconfig.json",
     "pack": "npm run build && npm pack"
   },
@@ -13,10 +13,11 @@
   "license": "ISC",
   "type": "module",
   "devDependencies": {
-    "@types/node": "^22.10.5",
-    "tscc": "file:../tscc/tscc-1.0.0.tgz"
+    "@types/node": "^22.10.5"
   },
-  "dependencies": {},
+  "dependencies": {
+    "tscc-lr1": "^1.0.0"
+  },
   "directories": {
     "test": "test"
   },

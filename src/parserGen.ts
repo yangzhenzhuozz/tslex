@@ -1,5 +1,5 @@
 import { NFAAutomaton, AutomatonEdge } from './automaton.js';
-import { Grammar, default as TSCC } from 'tscc';
+import { Grammar, default as TSCC } from 'tscc-lr1';
 import fs from 'fs';
 import { assert } from './tools.js';
 function gen() {
