@@ -74,7 +74,7 @@ class Lexer implements Lex {
               this.source.substring(this.pos + 1, this.pos + 5),
               16
             );
-            this.pos += 4;
+            this.pos += 5;//字母u和后面的4个unicode编码
             return createToken('ch', code);
           default:
             throw 'unkown escape';
