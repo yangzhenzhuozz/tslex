@@ -1,10 +1,10 @@
-import { NFAAutomaton, AutomatonEdge } from './automaton.js';
+import { NFAAutomaton, AutomatonEdge, AutomatonNode } from './automaton.js';
 import { Grammar, default as TSCC } from 'tscc-lr1';
 import fs from 'fs';
 import { assert } from './tools.js';
 function gen() {
   let grammar: Grammar = {
-    userCode: `import { NFAAutomaton,AutomatonEdge } from './automaton.js';\nimport { assert } from './tools.js';`,
+    userCode: `import { NFAAutomaton,AutomatonEdge,AutomatonNode } from './automaton.js';\nimport { assert } from './tools.js';`,
     tokens: ['ch', '[', ']', '-', '(', ')', '+', '*', '^', '{', '}', '|'],
     association: [
       { nonassoc: ['('] },
@@ -105,18 +105,29 @@ function gen() {
           action: function ($): NFAAutomaton {
             let edges = $[2] as AutomatonEdge[];
             assert(edges.length > 0, '^后面必须有至少一个字符');
-            let ret: NFAAutomaton | undefined = undefined;
+            let tmpNode = new AutomatonNode(); //创建一个临时节点
+            //处理完之后tmpNode的所有边都互不相交
             for (let edge of edges) {
-              for (let tmp of edge.not()) {
-                if (ret == undefined) {
-                  ret = new NFAAutomaton({ ch: [tmp.start, tmp.end] });
-                } else {
-                  tmp.target = [ret.end];
-                  ret.start.addEdge(tmp);
-                }
-              }
+              tmpNode.addEdge(edge);
             }
-            assert(ret != undefined);
+
+            let ret = new NFAAutomaton({
+              nodes: [new AutomatonNode(), new AutomatonNode()],
+            });
+            let start = 0;
+            for (let edge of tmpNode.edges.toArray()) {
+              if (start < edge.start) {
+                ret.start.addEdge(
+                  new AutomatonEdge(start, edge.start - 1, [ret.end])
+                );
+              }
+              start = edge.end + 1;
+            }
+            if (start < 0xffff) {
+              ret.start.addEdge(new AutomatonEdge(start, 0xffff, [ret.end]));
+            }
+            //这时候的resultEdges就是我们需要的边了
+
             return ret;
           },
         },

@@ -29,7 +29,9 @@ export class AutomatonEdge {
         new AutomatonEdge(this.start, this.end, this.target),
         new AutomatonEdge(other.start, other.end, other.target),
       ];
-    } else if (this.start < other.start && this.end > other.end) {
+    }
+    //this完全包含other
+    else if (this.start < other.start && this.end > other.end) {
       ret = [
         new AutomatonEdge(this.start, other.start - 1, this.target),
         new AutomatonEdge(other.start, other.end, [
@@ -38,7 +40,9 @@ export class AutomatonEdge {
         ]),
         new AutomatonEdge(other.end + 1, this.end, this.target),
       ];
-    } else if (this.start > other.start && this.end < other.end) {
+    }
+    //other完全包含this
+    else if (this.start > other.start && this.end < other.end) {
       ret = [
         new AutomatonEdge(other.start, this.start - 1, other.target),
         new AutomatonEdge(this.start, this.end, [
@@ -47,14 +51,17 @@ export class AutomatonEdge {
         ]),
         new AutomatonEdge(this.end + 1, other.end, other.target),
       ];
-    } else if (this.start === other.start && this.end === other.end) {
+    } //两者相等
+    else if (this.start === other.start && this.end === other.end) {
       ret = [
         new AutomatonEdge(this.start, this.end, [
           ...this.target,
           ...other.target,
         ]),
       ];
-    } else if (this.start === other.start) {
+    }
+    //start相等，但是end不相等
+    else if (this.start === other.start && this.end !== other.end) {
       if (this.end < other.end) {
         ret = [
           new AutomatonEdge(this.start, this.end, [
@@ -72,7 +79,9 @@ export class AutomatonEdge {
           new AutomatonEdge(other.end + 1, this.end, this.target),
         ];
       }
-    } else if (this.end === other.end) {
+    }
+    //end相等，但是start不相等
+    else if (this.end === other.end) {
       if (this.start < other.start) {
         ret = [
           new AutomatonEdge(this.start, other.start - 1, this.target),
@@ -90,6 +99,28 @@ export class AutomatonEdge {
           ]),
         ];
       }
+    }
+    // this 和 other 部分重叠，this 在左侧
+    else if (this.start < other.start && this.end < other.end) {
+      ret = [
+        new AutomatonEdge(this.start, other.start - 1, this.target),
+        new AutomatonEdge(other.start, this.end, [
+          ...this.target,
+          ...other.target,
+        ]),
+        new AutomatonEdge(this.end + 1, other.end, other.target),
+      ];
+    }
+    // this 和 other 部分重叠，other 在左侧
+    else if (this.end > other.end && this.start > other.start) {
+      ret = [
+        new AutomatonEdge(other.start, this.start - 1, other.target),
+        new AutomatonEdge(this.start, other.end, [
+          ...this.target,
+          ...other.target,
+        ]),
+        new AutomatonEdge(other.end + 1, this.end, this.target),
+      ];
     } else {
       throw new Error('不可能出现的情况');
     }
