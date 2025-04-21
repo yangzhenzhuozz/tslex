@@ -3,7 +3,6 @@ import {
   AutomatonNode,
   DFAAutomaton,
   DFAAutonSerializedData,
-  LexerRule,
   NFAAutomaton,
 } from './automaton.js';
 import Parse, { YYTOKEN } from './parser.js';
@@ -74,7 +73,7 @@ class Lexer implements Lex {
               this.source.substring(this.pos + 1, this.pos + 5),
               16
             );
-            this.pos += 5;//字母u和后面的4个unicode编码
+            this.pos += 5; //字母u和后面的4个unicode编码
             return createToken('ch', code);
           default:
             throw 'unkown escape';
@@ -89,12 +88,13 @@ class Lexer implements Lex {
     console.error(`${msg}"${this.lastToken}"`);
   }
 }
-export function genDFA<T>(rules: LexerRule<T>[]): DFAAutomaton {
+export function genDFA<T>(rules: string[]): DFAAutomaton {
   let NFAList: NFAAutomaton[] = [];
-  for (let r of rules) {
-    let lexer = new Lexer(r.reg);
+  for (let idx = 0; idx < rules.length; idx++) {
+    let r = rules[idx];
+    let lexer = new Lexer(r);
     let automaton = Parse(lexer) as NFAAutomaton;
-    automaton.end.endHandler.push(r.handler!);
+    automaton.end.endHandler.push(idx);
     NFAList.push(automaton);
   }
   let finalNFAStart = new AutomatonNode();

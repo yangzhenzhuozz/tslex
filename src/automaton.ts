@@ -160,7 +160,7 @@ export class AutomatonNode {
   static counter = 0;
   public idx: number;
   public edges: RBTree<AutomatonEdge>;
-  public endHandler: ((arg: string) => any)[] = [];
+  public endHandler = [] as number[];
   public constructor() {
     this.idx = AutomatonNode.counter;
     AutomatonNode.counter++;
@@ -429,7 +429,7 @@ interface DFAAutonSerializedDatum {
     end: number;
     target: number;
   }[];
-  handlers: ((text: string) => any)[];
+  handlers: number[];
 }
 export type DFAAutonSerializedData = DFAAutonSerializedDatum[];
 export class DFAAutomaton {
@@ -443,7 +443,7 @@ export class DFAAutomaton {
   public setSource(src: string) {
     this.source = src;
   }
-  public run() {
+  public run(handlers: ((arg: string) => any)[]): any {
     if (this.pos >= this.source.length) {
       if (this.endHandler) {
         return this.endHandler();
@@ -470,7 +470,7 @@ export class DFAAutomaton {
         }
       }
       if (lastState.endHandler.length > 0) {
-        let ret = lastState.endHandler[0](
+        let ret = handlers[lastState.endHandler[0]](
           this.source.substring(this.pos, this.pos + strLen)
         );
         this.pos += strLen;
@@ -539,8 +539,4 @@ export class DFAAutomaton {
     }
     return output;
   }
-}
-export interface LexerRule<T> {
-  reg: string;
-  handler: (text: string) => T;
 }
